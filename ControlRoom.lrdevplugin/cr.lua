@@ -79,8 +79,8 @@ function sendTempRange()
     
     if (lastKnownTempMin ~= tempMin) then
         lastKnownTempMin = tempMin
-        cr.SERVER:send(string.format('%s %g %g \r\n', 'TempRange', tempMin, tempMax))  -- sends string followed by value\
-        cr.SERVER:send(string.format('%s %g %g \r\n', 'TintRange', tintMin, tintMax))
+        cr.SERVER:send(string.format('TempRange:%g,%g\r\n', tempMin, tempMax))
+        cr.SERVER:send(string.format('TintRange:%g,%g\r\n', tintMin, tintMax))
     end
 end
 -- end sendTempRange
