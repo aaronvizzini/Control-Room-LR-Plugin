@@ -13,7 +13,8 @@ local LrTasks = import 'LrTasks'
 local handleMessage
 local sendSpecificSettings
 local startServer
-local lastKnownTempMin;
+local lastKnownTempMin
+local sendTempRange
 
 --remove and test w/o
 local updateParam
@@ -33,6 +34,17 @@ function handleMessage(message)
             end
         end
     end
+    
+    if (prefix == 'Preset') then        
+        local preset = LrApplication.developPresetByUuid( typeValue )
+        local activeCatalog = LrApplication.activeCatalog()
+
+        LrTasks.startAsyncTask (function ()
+            activeCatalog:withWriteAccessDo ("Apply Preset", function ()
+                activeCatalog:getTargetPhoto():applyDevelopPreset(preset)
+            end, {timeout = 15})
+        end)
+    end
 
     if (prefix == 'CMD') then
         if(typeValue == 'library' or typeValue == 'develop') then
@@ -42,6 +54,10 @@ function handleMessage(message)
         if(typeValue == 'connected') then
             sendAllSettings()
         end
+        
+        if(typeValue == 'requestPresets') then
+            sendDeveloperPresets()
+        end 
     end
 end
 --end handleMessage
@@ -50,7 +66,7 @@ end
 function sendAllSettings()
     lastKnownTempMin = 0
     
-    --sendTempRange()
+    sendTempRange()
     --sendVersionNumber()
     
     for _, valueType in ipairs(VALUE_TYPES) do
@@ -84,6 +100,23 @@ function sendTempRange()
     end
 end
 -- end sendTempRange
+
+-- send developer presets
+function sendDeveloperPresets()
+    local presetFolders = LrApplication.developPresetFolders()
+    
+    for i, folder in ipairs( presetFolders ) do
+        
+        local presets = folder:getDevelopPresets()
+        
+        for i2, preset in ipairs( presets ) do
+            --send preset
+            --LrDialogs.message(folder:getName(), preset:getUuid(),nil)
+            cr.SERVER:send(string.format('Preset:%s,%s,%s\r\n', folder:getName(), preset:getName(), preset:getUuid()))
+        end
+    end
+end
+--
 
 -- start send server
 function startServer(context)
