@@ -14,12 +14,15 @@ local handleMessage
 local sendSpecificSettings
 local startServer
 local lastKnownTempMin
-local sendTempRange
+local sendTempTintRanges
 
 --remove and test w/o
 local updateParam
 
-cr = {VALUE_TYPES = {}, PICKUP_ENABLED = true, SERVER = {} } 
+cr = {VALUE_TYPES = {}, PICKUP_ENABLED = true, SERVER = {} }
+
+local receivedType = ""
+local receivedValue = -99999
 
 -- handle an incoming message, either update the appropriate development value or execute a command
 function handleMessage(message)
@@ -30,6 +33,9 @@ function handleMessage(message)
     if (prefix == 'ValueType') then
         for _, valueType in ipairs(VALUE_TYPES) do
             if(valueType == typeStr) then
+                receivedType = valueType
+                receivedValue = (tonumber(value))
+                
                 LrDevelopController.setValue(valueType, (tonumber(value)))
             end
         end
@@ -51,7 +57,7 @@ function handleMessage(message)
             LrApplicationView.switchToModule( typeValue )
         end
 
-        if(typeValue == 'connected') then
+        if(typeValue == 'sendAllSettings') then
             sendAllSettings()
         end
         
@@ -66,8 +72,7 @@ end
 function sendAllSettings()
     lastKnownTempMin = 0
     
-    sendTempRange()
-    --sendVersionNumber()
+    sendTempTintRanges()
     
     for _, valueType in ipairs(VALUE_TYPES) do
         cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends 
@@ -77,19 +82,22 @@ end
 
 -- send the specific updated development value change made locally to the app
 function sendSpecificSettings( observer )
+    sendTempTintRanges() -- Was at LOC A - Problem?
     for _, valueType in ipairs(VALUE_TYPES) do
-        if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
-            cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends  string followed by value
-            observer[valueType] = LrDevelopController.getValue(valueType)
+        -- LOC A
+        if(valueType ~= receivedType or LrDevelopController.getValue(valueType) ~= receivedValue) then
+            if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
+                cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends  string followed by value
+                --LrDialogs.message(receivedType, receivedValue,nil)
+                observer[valueType] = LrDevelopController.getValue(valueType)
+            end
         end
-       
-        sendTempRange()
     end
 end
 -- end sendSpecificSettings
 
--- send the temp range for the photo to the app
-function sendTempRange()
+-- send the temp and tint range for the photo to the app
+function sendTempTintRanges()
     local tempMin, tempMax = LrDevelopController.getRange( 'Temperature' )
     local tintMin, tintMax = LrDevelopController.getRange( 'Tint')
     
@@ -99,7 +107,7 @@ function sendTempRange()
         cr.SERVER:send(string.format('TintRange:%g,%g\r\n', tintMin, tintMax))
     end
 end
--- end sendTempRange
+-- end sendTempTintRanges
 
 -- send developer presets
 function sendDeveloperPresets()
