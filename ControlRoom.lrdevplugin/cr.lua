@@ -21,8 +21,8 @@ local updateParam
 
 cr = {VALUE_TYPES = {}, PICKUP_ENABLED = true, SERVER = {} }
 
-local receivedType = ""
-local receivedValue = -99999
+local receivedType
+local receivedValue
 
 -- handle an incoming message, either update the appropriate development value or execute a command
 function handleMessage(message)
@@ -83,15 +83,16 @@ end
 -- send the specific updated development value change made locally to the app
 function sendSpecificSettings( observer )
     sendTempTintRanges() -- Was at LOC A - Problem?
+    
     for _, valueType in ipairs(VALUE_TYPES) do
         -- LOC A
-        if(valueType ~= receivedType or LrDevelopController.getValue(valueType) ~= receivedValue) then
-            if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
+        if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
+            if( (valueType ~= receivedType) or (tostring(LrDevelopController.getValue(valueType)) ~= tostring(receivedValue)) ) then
                 cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends  string followed by value
-                --LrDialogs.message(receivedType, receivedValue,nil)
-                observer[valueType] = LrDevelopController.getValue(valueType)
             end
-        end
+            
+            observer[valueType] = LrDevelopController.getValue(valueType)
+        end 
     end
 end
 -- end sendSpecificSettings
