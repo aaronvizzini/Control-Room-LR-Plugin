@@ -89,6 +89,9 @@ function sendSpecificSettings( observer )
         if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
             if( (valueType ~= receivedType) or (tostring(LrDevelopController.getValue(valueType)) ~= tostring(receivedValue)) ) then
                 cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends  string followed by value
+                
+                receivedType = ""
+                receivedValue = -999999
             end
             
             observer[valueType] = LrDevelopController.getValue(valueType)
@@ -194,7 +197,7 @@ end )
 -- end main
 
 -- open the control room server app
---LrTasks.startAsyncTask( function()
-    --  LrShell.openFilesInApp({_PLUGIN.path..'/info.lua'}, _PLUGIN.path..'/Control\ Room.app') 
---  end)
+LrTasks.startAsyncTask( function()
+   -- LrShell.openFilesInApp({_PLUGIN.path..'/info.lua'}, _PLUGIN.path..'/Control\ Room\ Server.app') 
+end)
 -- end open the control room server app
