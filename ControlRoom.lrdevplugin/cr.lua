@@ -9,6 +9,7 @@ local LrSelection = import 'LrSelection'
 local LrShell = import 'LrShell'
 local LrSocket = import 'LrSocket'
 local LrTasks = import 'LrTasks'
+local LrUndo = import 'LrUndo'
 
 local handleMessage
 local sendSpecificSettings
@@ -63,6 +64,18 @@ function handleMessage(message)
         
         if(typeValue == 'requestPresets') then
             sendDeveloperPresets()
+        end 
+        
+        if(typeValue == 'undo') then
+            if(LrUndo.canUndo()) then
+                LrUndo.undo()
+            end
+        end 
+        
+        if(typeValue == 'redo') then
+            if(LrUndo.canRedo()) then
+                LrUndo.redo()
+            end 
         end 
     end
 end
@@ -198,6 +211,6 @@ end )
 
 -- open the control room server app
 LrTasks.startAsyncTask( function()
-   -- LrShell.openFilesInApp({_PLUGIN.path..'/info.lua'}, _PLUGIN.path..'/Control\ Room\ Server.app') 
+   LrShell.openFilesInApp({_PLUGIN.path..'/info.lua'}, _PLUGIN.path..'/Control\ Room\ Server.app') 
 end)
 -- end open the control room server app
