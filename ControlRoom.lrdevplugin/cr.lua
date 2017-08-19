@@ -16,11 +16,14 @@ local sendSpecificSettings
 local startServer
 local lastKnownTempMin
 local sendTempTintRanges
+local sendStarRating
 
 --remove and test w/o
 local updateParam
 
+--observers
 cr = {VALUE_TYPES = {}, PICKUP_ENABLED = true, SERVER = {} }
+photoChangeObserver = 0
 
 local receivedType
 local receivedValue
@@ -56,6 +59,10 @@ function handleMessage(message)
     if (prefix == 'CMD') then
         if(typeValue == 'library' or typeValue == 'develop') then
             LrApplicationView.switchToModule( typeValue )
+            
+            if (typeValue == 'library') then
+                sendStarRating( nil )
+            end
         end
 
         if(typeValue == 'sendAllSettings') then
@@ -64,6 +71,10 @@ function handleMessage(message)
         
         if(typeValue == 'requestPresets') then
             sendDeveloperPresets()
+        end 
+        
+        if(typeValue == 'getStarRating') then
+            sendStarRating( nil )
         end 
         
         if(typeValue == 'undo') then
@@ -81,6 +92,21 @@ function handleMessage(message)
 end
 --end handleMessage
 
+-- called when the Lightroom photo selection changes
+function sendStarRating( observer )
+    local starRating = ''
+    local activeCatalog = LrApplication.activeCatalog()
+    local targetPhoto = activeCatalog:getTargetPhoto()
+    
+    LrTasks.startAsyncTask (function ()
+        starRating = targetPhoto:getFormattedMetadata('rating')
+
+        cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+    end)
+        
+end
+--end sendStarRating
+    
 -- send all of the development values to the app
 function sendAllSettings()
     lastKnownTempMin = 0
@@ -141,7 +167,7 @@ function sendDeveloperPresets()
         end
     end
 end
---
+-- end sendDeveloperPresets
 
 -- start send server
 function startServer(context)
@@ -163,6 +189,8 @@ end
 LrTasks.startAsyncTask( function()
     LrFunctionContext.callWithContext( 'start_servers', function( context )
         LrDevelopController.revealAdjustedControls( true ) -- reveal affected parameter in panel track
+
+        LrApplication.addActivePhotoChangeObserver( context, photoChangeObserver, sendStarRating )
 
         LrDevelopController.addAdjustmentChangeObserver( context, cr.VALUE_TYPES, sendSpecificSettings )
 
@@ -212,5 +240,6 @@ end )
 -- open the control room server app
 LrTasks.startAsyncTask( function()
    LrShell.openFilesInApp({_PLUGIN.path..'/info.lua'}, _PLUGIN.path..'/Control\ Room\ Server.app') 
+   LrDevelopController.revealAdjustedControls(false)
 end)
 -- end open the control room server app
