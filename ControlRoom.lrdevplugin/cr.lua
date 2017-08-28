@@ -99,9 +99,13 @@ function sendStarRating( observer )
     local targetPhoto = activeCatalog:getTargetPhoto()
     
     LrTasks.startAsyncTask (function ()
-        starRating = targetPhoto:getFormattedMetadata('rating')
-
-        cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+        if targetPhoto ~= nil then 
+            starRating = targetPhoto:getFormattedMetadata('rating')
+            
+            if starRating ~= nil then 
+                    cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+            end
+        end
     end)
         
 end
@@ -144,11 +148,11 @@ function sendTempTintRanges()
     local tempMin, tempMax = LrDevelopController.getRange( 'Temperature' )
     local tintMin, tintMax = LrDevelopController.getRange( 'Tint')
     
-    if (lastKnownTempMin ~= tempMin) then
+    --if (lastKnownTempMin ~= tempMin) then
         lastKnownTempMin = tempMin
         cr.SERVER:send(string.format('TempRange:%g,%g\r\n', tempMin, tempMax))
         cr.SERVER:send(string.format('TintRange:%g,%g\r\n', tintMin, tintMax))
-    end
+    --end
 end
 -- end sendTempTintRanges
 
