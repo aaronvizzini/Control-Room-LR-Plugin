@@ -65,6 +65,10 @@ function handleMessage(message)
             end
         end
 
+        if(typeValue == 'reset') then
+            LrDevelopController.resetAllDevelopAdjustments()
+        end
+        
         if(typeValue == 'sendAllSettings') then
             sendAllSettings()
         end
@@ -88,12 +92,59 @@ function handleMessage(message)
                 LrUndo.redo()
             end 
         end 
+        
+        if(typeValue == 'forward') then
+            LrSelection.nextPhoto()
+        end 
+        
+        if(typeValue == 'backward') then
+            LrSelection.previousPhoto()
+        end 
+        
+        if(typeValue == 'flagSave') then
+            LrSelection.flagAsPick()
+        end 
+        
+        if(typeValue == 'flagDelete') then
+            LrSelection.flagAsReject()
+        end 
+        
+        if(typeValue == 'unflag') then
+            LrSelection.removeFlag()
+        end
+        
+        if(typeValue == 'starZero') then
+            LrSelection.setRating(0)
+        end 
+        
+        if(typeValue == 'starOne') then
+            LrSelection.setRating(1)
+        end 
+        
+        if(typeValue == 'starTwo') then
+            LrSelection.setRating(2)
+        end 
+        
+        if(typeValue == 'starThree') then
+            LrSelection.setRating(3)
+        end 
+        
+        if(typeValue == 'starFour') then
+            LrSelection.setRating(4)
+        end 
+        
+        if(typeValue == 'starFive') then
+            LrSelection.setRating(5)
+        end 
     end
 end
 --end handleMessage
 
 -- called when the Lightroom photo selection changes
 function sendStarRating( observer )
+    receivedType = ""
+    receivedValue = -999999
+            
     local starRating = ''
     local activeCatalog = LrApplication.activeCatalog()
     local targetPhoto = activeCatalog:getTargetPhoto()
@@ -104,6 +155,10 @@ function sendStarRating( observer )
             
             if starRating ~= nil then 
                     cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+            end
+                
+            if starRating == nil then 
+                cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', 0))
             end
         end
     end)
@@ -148,11 +203,11 @@ function sendTempTintRanges()
     local tempMin, tempMax = LrDevelopController.getRange( 'Temperature' )
     local tintMin, tintMax = LrDevelopController.getRange( 'Tint')
     
-    --if (lastKnownTempMin ~= tempMin) then
+    if (lastKnownTempMin ~= tempMin) then
         lastKnownTempMin = tempMin
         cr.SERVER:send(string.format('TempRange:%g,%g\r\n', tempMin, tempMax))
         cr.SERVER:send(string.format('TintRange:%g,%g\r\n', tintMin, tintMax))
-    --end
+    end
 end
 -- end sendTempTintRanges
 
@@ -196,8 +251,16 @@ LrTasks.startAsyncTask( function()
 
         LrApplication.addActivePhotoChangeObserver( context, photoChangeObserver, sendStarRating )
 
-        LrDevelopController.addAdjustmentChangeObserver( context, cr.VALUE_TYPES, sendSpecificSettings )
+        --Adjustment change observer can only be added when in the develop module. Therefore, we briefly switch to the develop module add the observer and switch back to the previously module 
+        local oldModule = LrApplicationView.getCurrentModuleName()
+        LrApplicationView.switchToModule( 'develop' )
+                
+        if LrApplicationView.getCurrentModuleName() == 'develop' then
+            LrDevelopController.addAdjustmentChangeObserver( context, cr.VALUE_TYPES, sendSpecificSettings )
+        end
 
+        LrApplicationView.switchToModule( oldModule )
+                
         local client = LrSocket.bind {
             functionContext = context,
             plugin = _PLUGIN,
