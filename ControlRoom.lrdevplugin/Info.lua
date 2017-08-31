@@ -6,7 +6,7 @@ return {
     LrForceInitPlugin = true,
     LrExportMenuItems = {
         {
-            title = "Start Control Room",
+            title = LOC "$$$/RestartControlRoom=(Re)start Control Room",
             file = "cr.lua"
         },  
     },
