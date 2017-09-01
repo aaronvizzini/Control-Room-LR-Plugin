@@ -57,6 +57,10 @@ function handleMessage(message)
     end
 
     if (prefix == 'CMD') then
+        if(typeValue == 'requestVersion') then
+            cr.SERVER:send(string.format('Version:%s\r\n', '1.4'))
+        end
+        
         if(typeValue == 'library' or typeValue == 'develop') then
             LrApplicationView.switchToModule( typeValue )
             
