@@ -177,7 +177,10 @@ function sendAllSettings()
     sendTempTintRanges()
     
     for _, valueType in ipairs(VALUE_TYPES) do
-        cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends 
+        local value = LrDevelopController.getValue(valueType)
+        if value ~= nil then
+            cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, value))  -- sends 
+        end
     end
 end
 -- end sendAllSettings
@@ -187,17 +190,21 @@ function sendSpecificSettings( observer )
     sendTempTintRanges() -- Was at LOC A - Problem?
     
     for _, valueType in ipairs(VALUE_TYPES) do
-        -- LOC A
-        if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
-            if( (valueType ~= receivedType) or (tostring(LrDevelopController.getValue(valueType)) ~= tostring(receivedValue)) ) then
-                cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, LrDevelopController.getValue(valueType)))  -- sends  string followed by value
-                
-                receivedType = ""
-                receivedValue = -999999
-            end
-            
-            observer[valueType] = LrDevelopController.getValue(valueType)
-        end 
+        local value = LrDevelopController.getValue(valueType)
+        
+        if value ~= nil then
+            -- LOC A
+            if(observer[valueType] ~= LrDevelopController.getValue(valueType)) then
+                if( (valueType ~= receivedType) or (tostring(value) ~= tostring(receivedValue)) ) then
+                    cr.SERVER:send(string.format('ValueType:%s,%g\r\n', valueType, value))  -- sends  string followed by value
+
+                    receivedType = ""
+                    receivedValue = -999999
+                end
+
+                observer[valueType] = value
+            end 
+        end
     end
 end
 -- end sendSpecificSettings

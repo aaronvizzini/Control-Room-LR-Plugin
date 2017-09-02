@@ -1,5 +1,4 @@
 VALUE_TYPES = {
-
     -- Adjust-Basic Panel
     'Temperature',
     'Tint',
@@ -61,11 +60,11 @@ VALUE_TYPES = {
     'GrayMixerMagenta',
     
     -- Split Toning
-    'SplitToningShadowHue',
-    'SplitToningShadowSaturation',
-    'SplitToningHighlightHue',
-    'SplitToningHighlightSaturation',
-    'SplitToningBalance',
+    --'SplitToningShadowHue',
+    --'SplitToningShadowSaturation',
+    --'SplitToningHighlightHue',
+    --'SplitToningHighlightSaturation',
+    --'SplitToningBalance',
     
     -- Detail Panel
     'Sharpness',
@@ -81,49 +80,49 @@ VALUE_TYPES = {
     
     --Effects Panel
     -- Dehaze
-    'Dehaze',
+    --'Dehaze',
     -- Post-Crop Vignetting
-    'PostCropVignetteAmount',
-    'PostCropVignetteMidpoint',
-    'PostCropVignetteFeather',
-    'PostCropVignetteRoundness',
-    'PostCropVignetteStyle',
-    'PostCropVignetteHighlightContrast',
+    --'PostCropVignetteAmount',
+    --'PostCropVignetteMidpoint',
+    --'PostCropVignetteFeather',
+    --'PostCropVignetteRoundness',
+    --'PostCropVignetteStyle',
+    --'PostCropVignetteHighlightContrast',
     -- Grain
-    'GrainAmount',
-    'GrainSize',
-    'GrainFrequency',
+    --'GrainAmount',
+    --'GrainSize',
+    --'GrainFrequency',
     
     -- Lens Correction Panel
     -- Profile
-    'LensProfileDistortionScale',
-    'LensProfileChromaticAberrationScale',
-    'LensProfileVignettingScale',
-    'LensManualDistortionAmount',
+    --'LensProfileDistortionScale',
+    --'LensProfileChromaticAberrationScale',
+    --'LensProfileVignettingScale',
+    --'LensManualDistortionAmount',
     -- Color
-    'DefringePurpleAmount',
-    'DefringePurpleHueLo',
-    'DefringePurpleHueHi',
-    'DefringeGreenAmount',
-    'DefringeGreenHueLo',
-    'DefringeGreenHueHi',
+    --'DefringePurpleAmount',
+    --'DefringePurpleHueLo',
+    --'DefringePurpleHueHi',
+    --'DefringeGreenAmount',
+    --'DefringeGreenHueLo',
+    --'DefringeGreenHueHi',
     -- Manual Perspective
-    'PerspectiveVertical',
-    'PerspectiveHorizontal',
-    'PerspectiveRotate',
-    'PerspectiveScale',
-    'PerspectiveAspect',
-    'PerspectiveUpright',
+    --'PerspectiveVertical',
+    --'PerspectiveHorizontal',
+    --'PerspectiveRotate',
+    --'PerspectiveScale',
+    --'PerspectiveAspect',
+    --'PerspectiveUpright',
     
     --Calibrate Panel
-    'ShadowTint',
-    'RedHue',
-    'RedSaturation',
-    'GreenHue',
-    'GreenSaturation',
-    'BlueHue',
-    'BlueSaturation',
+    --'ShadowTint',
+    --'RedHue',
+    --'RedSaturation',
+    --'GreenHue',
+    --'GreenSaturation',
+    --'BlueHue',
+    --'BlueSaturation',
 
     -- Crop Angel
-    'case straightenAngl',
+    --'case straightenAngl',
 }
