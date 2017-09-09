@@ -16,7 +16,11 @@ local sendSpecificSettings
 local startServer
 local lastKnownTempMin
 local sendTempTintRanges
-local sendStarRating
+local photoSelectionChange
+local sendColorLabel
+
+--keep track if server connected
+local isConnected = false
 
 --remove and test w/o
 local updateParam
@@ -56,16 +60,24 @@ function handleMessage(message)
         end)
     end
 
+    if (prefix == 'CLabel') then
+        LrSelection.setColorLabel( typeValue )
+    end
+    
+    if (prefix == 'Rating') then
+        LrSelection.setRating((tonumber(typeValue)))
+    end
+    
     if (prefix == 'CMD') then
         if(typeValue == 'requestVersion') then
-            cr.SERVER:send(string.format('Version:%s\r\n', '1.4'))
+            cr.SERVER:send(string.format('Version:%s\r\n', '1.5'))
         end
         
         if(typeValue == 'library' or typeValue == 'develop') then
             LrApplicationView.switchToModule( typeValue )
             
             if (typeValue == 'library') then
-                sendStarRating( nil )
+                photoSelectionChange( nil )
             end
         end
 
@@ -82,7 +94,11 @@ function handleMessage(message)
         end 
         
         if(typeValue == 'getStarRating') then
-            sendStarRating( nil )
+            photoSelectionChange( nil )
+        end 
+        
+        if(typeValue == 'getColorLabel') then
+
         end 
         
         if(typeValue == 'undo') then
@@ -116,59 +132,59 @@ function handleMessage(message)
         if(typeValue == 'unflag') then
             LrSelection.removeFlag()
         end
-        
-        if(typeValue == 'starZero') then
-            LrSelection.setRating(0)
-        end 
-        
-        if(typeValue == 'starOne') then
-            LrSelection.setRating(1)
-        end 
-        
-        if(typeValue == 'starTwo') then
-            LrSelection.setRating(2)
-        end 
-        
-        if(typeValue == 'starThree') then
-            LrSelection.setRating(3)
-        end 
-        
-        if(typeValue == 'starFour') then
-            LrSelection.setRating(4)
-        end 
-        
-        if(typeValue == 'starFive') then
-            LrSelection.setRating(5)
-        end 
     end
 end
 --end handleMessage
 
 -- called when the Lightroom photo selection changes
-function sendStarRating( observer )
+function photoSelectionChange( observer )
     receivedType = ""
     receivedValue = -999999
-            
-    local starRating = ''
-    local activeCatalog = LrApplication.activeCatalog()
-    local targetPhoto = activeCatalog:getTargetPhoto()
     
-    LrTasks.startAsyncTask (function ()
-        if targetPhoto ~= nil then 
-            starRating = targetPhoto:getFormattedMetadata('rating')
+    local starRating = LrSelection.getRating()
             
-            if starRating ~= nil then 
-                    cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
-            end
-                
-            if starRating == nil then 
-                cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', 0))
-            end
-        end
-    end)
+    if starRating == nil then 
+        starRating = 0
+    end
+
+    if isConnected == true then 
+        cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+    end
+    
+    local colorLabel = LrSelection.getColorLabel()
+            
+    if colorLabel == nil then 
+        colorLabel = 'none'
+    end
+    
+    if colorLabel == 'other' then 
+        colorLabel = 'none'
+    end
+
+    if isConnected == true then 
+        cr.SERVER:send(string.format('ColorLabel:%s\r\n', colorLabel))
+    end
+    
+  --  local starRating = ''
+  --  local activeCatalog = LrApplication.activeCatalog()
+  --  local targetPhoto = activeCatalog:getTargetPhoto()
+    
+  --  LrTasks.startAsyncTask (function ()
+  --      if targetPhoto ~= nil then 
+  --          starRating = targetPhoto:getFormattedMetadata('rating')
+            
+  --          if starRating == nil then 
+  --              starRating = 0
+  --          end
+            
+  --          if isConnected == true then 
+  --              cr.SERVER:send(string.format('ValueType:%s,%s\r\n', 'StarRating', starRating))
+  --          end
+  --      end
+  --  end)
         
 end
---end sendStarRating
+--end photoSelectionChange
     
 -- send all of the development values to the app
 function sendAllSettings()
@@ -246,9 +262,14 @@ function startServer(context)
     plugin = _PLUGIN,
     port = 54347,
     mode = 'send',
+    onConnected = function( socket, port )
+            isConnected = true
+        end,
     onClosed = function( socket ) 
+            isConnected = false
         end,
     onError = function( socket, err )
+            isConnected = false
             socket:reconnect()
         end,
     }
@@ -260,7 +281,7 @@ LrTasks.startAsyncTask( function()
     LrFunctionContext.callWithContext( 'start_servers', function( context )
         LrDevelopController.revealAdjustedControls( true ) -- reveal affected parameter in panel track
 
-        LrApplication.addActivePhotoChangeObserver( context, photoChangeObserver, sendStarRating )
+        LrApplication.addActivePhotoChangeObserver( context, photoChangeObserver, photoSelectionChange )
 
         --Adjustment change observer can only be added when in the develop module. Therefore, we briefly switch to the develop module add the observer and switch back to the previously module 
         local oldModule = LrApplicationView.getCurrentModuleName()
@@ -283,6 +304,7 @@ LrTasks.startAsyncTask( function()
             end,
             
             onConnected = function( socket, port )
+                isConnected = true
                 --LrDialogs.message("Connected","connected",nil)
             end,
             
@@ -291,6 +313,7 @@ LrTasks.startAsyncTask( function()
             end,
             
             onClosed = function( socket )
+                isConnected = false
                 --socket:reconnect()
                 cr.SERVER:close()
                 --startServer(context)
@@ -308,7 +331,7 @@ LrTasks.startAsyncTask( function()
         while true do
            LrTasks.sleep( 1/2 )
         end
-
+        isConnected = false
         client:close()
         cr.SERVER:close()
     end )
